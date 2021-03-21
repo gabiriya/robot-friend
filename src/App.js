@@ -1,25 +1,47 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import CardList from "./Components/CardList";
+import "tachyons";
+import axios from "axios";
 
-function App() {
+import SearchBox from "./Components/SearchBox";
+import Scroll from "./Components/Scroll";
+
+const App = () => {
+ // Fetch Data
+ useEffect(() => {
+  async function fetchRobots() {
+   const Robots = await axios("https://jsonplaceholder.typicode.com/users");
+   setRobots(Robots.data);
+  }
+  fetchRobots();
+ }, []);
+ //--- Declare state
+ const [Robots, setRobots] = useState([]);
+ const [SearchField, setSearchField] = useState("");
+
+ //- On change function
+ const onSearchChange = (event) => {
+  setSearchField(event.target.value);
+ };
+
+ //--- Filtered Robots
+ const filteredRobots = Robots.filter((robot) => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+   robot.name
+    //    .toString()
+    .toLowerCase()
+    .includes(SearchField.toLowerCase())
   );
-}
+ });
+ //---- Return
+ return (
+  <div className="tc">
+   <SearchBox SearchChange={onSearchChange} />
+   <Scroll>
+    <CardList Robots={filteredRobots} />
+   </Scroll>
+  </div>
+ );
+};
 
 export default App;
