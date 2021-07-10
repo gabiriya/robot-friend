@@ -1,47 +1,63 @@
-import React, { useState, useEffect } from "react";
-import CardList from "./Components/CardList";
-import "tachyons";
-import axios from "axios";
+import React, { Component } from "react";
 
+import CardList from "./Components/CardList";
 import SearchBox from "./Components/SearchBox";
 import Scroll from "./Components/Scroll";
 
-const App = () => {
- // Fetch Data
- useEffect(() => {
-  async function fetchRobots() {
-   const Robots = await axios("https://jsonplaceholder.typicode.com/users");
-   setRobots(Robots.data);
-  }
-  fetchRobots();
- }, []);
- //--- Declare state
- const [Robots, setRobots] = useState([]);
- const [SearchField, setSearchField] = useState("");
+// import axios from "axios";
+import "tachyons";
+import { connect } from "react-redux";
+import { setSearchField, loadRobotsList } from "./Redux/Actions";
 
- //- On change function
- const onSearchChange = (event) => {
-  setSearchField(event.target.value);
- };
+class App extends Component {
+ componentDidMount() {
+  this.props.onRequestRobots();
+ }
 
- //--- Filtered Robots
- const filteredRobots = Robots.filter((robot) => {
+ render() {
+  const { Robots, onSearchChange, searchField } = this.props;
+  console.log("ROboT : " + Robots);
+  // if (Array.isArray(Robots)) {
+  const filtredArray = Robots.filter((robot) => {
+   return (
+    robot.name.toLowerCase().includes(searchField.toLowerCase()) ||
+    robot.email.toLowerCase().includes(searchField.toLowerCase())
+   );
+  });
+  console.log(filtredArray);
+  // }
   return (
-   robot.name
-    //    .toString()
-    .toLowerCase()
-    .includes(SearchField.toLowerCase())
+   <>
+    {Array.isArray(Robots) ? (
+     <div className="tc">
+      <SearchBox SearchChange={onSearchChange} />
+      <Scroll>
+       <CardList Robots={filtredArray} />
+      </Scroll>
+     </div>
+    ) : (
+     <></>
+    )}
+   </>
   );
- });
- //---- Return
- return (
-  <div className="tc">
-   <SearchBox SearchChange={onSearchChange} />
-   <Scroll>
-    <CardList Robots={filteredRobots} />
-   </Scroll>
-  </div>
- );
+ }
+}
+
+const mapStateToProps = (state) => {
+ console.log("state r : " + state.robotsReducer.RobotsList);
+ return {
+  searchField: state.SearchRobots.searchField,
+  Robots: state.robotsReducer.RobotsList,
+  isPending: state.robotsReducer.loadingRobots,
+ };
 };
 
-export default App;
+const mapDispatchToProps = (dispatch) => {
+ console.log("Dispatch :" + dispatch);
+ return {
+  onSearchChange: (event) => dispatch(setSearchField(event.target.value)),
+  onRequestRobots: () => dispatch(loadRobotsList()),
+ };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
